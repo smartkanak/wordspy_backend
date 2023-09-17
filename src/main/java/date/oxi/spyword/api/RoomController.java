@@ -3,6 +3,7 @@ package date.oxi.spyword.api;
 import date.oxi.spyword.dto.PlayerDto;
 import date.oxi.spyword.dto.RoomDto;
 import date.oxi.spyword.utils.RoomCodeGenerator;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
+@Tag(name = "Rooms")
 @RequestMapping("/api/v1/rooms")
 public class RoomController {
 

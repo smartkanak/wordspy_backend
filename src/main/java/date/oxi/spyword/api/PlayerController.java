@@ -1,5 +1,6 @@
 package date.oxi.spyword.api;
 
+import date.oxi.spyword.dto.CreatePlayerRequest;
 import date.oxi.spyword.dto.PlayerDto;
 import lombok.NonNull;
 import org.springframework.http.HttpStatus;
@@ -8,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/players")
@@ -19,14 +19,14 @@ public class PlayerController {
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<PlayerDto> createPlayer(
-            @NonNull String name
+            @RequestBody
+            @NonNull CreatePlayerRequest createPlayerRequest
     ) {
-        UUID playerId = UUID.randomUUID();
 
-        PlayerDto playerDto = PlayerDto.builder()
-                .id(playerId)
-                .name(name.trim())
-                .build();
+        PlayerDto playerDto = PlayerDto.register(
+                createPlayerRequest.getName(),
+                createPlayerRequest.getLanguageCode()
+        );
 
         players.add(playerDto);
 

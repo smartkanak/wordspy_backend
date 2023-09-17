@@ -20,6 +20,7 @@ public class RoomController {
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<RoomDto> createRoom(
+            @RequestBody
             @NonNull PlayerDto host
     ) {
         String roomCode = roomCodeGenerator.generateUniqueCode();
@@ -48,6 +49,7 @@ public class RoomController {
     public ResponseEntity<RoomDto> joinRoom(
             @PathVariable
             @NonNull String code,
+            @RequestBody
             @NonNull PlayerDto player
     ) {
         RoomDto foundRoom = getRoomByCode(code);

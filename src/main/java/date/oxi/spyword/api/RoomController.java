@@ -30,4 +30,40 @@ public class RoomController {
         return ResponseEntity.status(HttpStatus.CREATED).body(roomDto);
     }
 
+    @GetMapping("/{code}")
+    public ResponseEntity<RoomDto> getRoomInfo(
+            @PathVariable
+            @NonNull String code
+    ) {
+        RoomDto foundRoom = getRoomByCode(code);
+
+        if (foundRoom == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } else {
+            return ResponseEntity.status(HttpStatus.OK).body(foundRoom);
+        }
+    }
+
+    @PostMapping("/{code}/join")
+    public ResponseEntity<RoomDto> joinRoom(
+            @PathVariable
+            @NonNull String code,
+            @NonNull PlayerDto player
+    ) {
+        RoomDto foundRoom = getRoomByCode(code);
+
+        if (foundRoom == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        foundRoom.addPlayer(player);
+        return ResponseEntity.status(HttpStatus.OK).body(foundRoom);
+    }
+
+    private RoomDto getRoomByCode(String code) {
+        return rooms.stream()
+                .filter(room -> room.getCode().equals(code))
+                .findFirst()
+                .orElse(null);
+    }
 }

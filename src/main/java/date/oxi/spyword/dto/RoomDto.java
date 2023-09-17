@@ -39,4 +39,8 @@ public class RoomDto {
         this.round = RoundDto.reset();
     }
 
+    public void addPlayer(PlayerDto player) {
+        this.players.add(player);
+    }
+
 }

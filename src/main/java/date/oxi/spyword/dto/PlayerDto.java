@@ -14,7 +14,7 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PlayerDto {
 
-        @Schema(description = "Player id", example = "1")
+        @Schema(description = "Player id", example = "25b43e41-1305-4ace-8c6c-871da6487cf9")
         @JsonProperty(access = JsonProperty.Access.READ_ONLY)
         private final UUID id;
 

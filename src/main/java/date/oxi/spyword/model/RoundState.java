@@ -3,7 +3,7 @@ package date.oxi.spyword.model;
 
 public enum RoundState {
     WAITING,
-    IN_PROGRESS,
+    RUNNING,
     COMPLETED,
     CANCELED,
 }

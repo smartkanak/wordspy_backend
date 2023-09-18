@@ -3,37 +3,41 @@ package date.oxi.spyword.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import date.oxi.spyword.model.RoundState;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Schema
-@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RoundDto {
 
     @Schema(description = "The good word for the good team")
-    private final String goodWord;
+    private String goodWord;
 
     @Schema(description = "The bad word for the bad team")
-    private final String badWord;
-
-    @Schema(description = "The state of the round")
-    private final RoundState state;
-
-    @Schema(description = "The player whose turn it is")
-    private final PlayerDto turn;
+    private String badWord;
 
     @Schema(description = "The player who is the spy")
-    private final PlayerDto spy;
+    private Integer spyIndex;
 
-    public static RoundDto reset() {
-        return RoundDto.builder()
-                .goodWord(null)
-                .badWord(null)
-                .state(RoundState.WAITING)
-                .turn(null)
-                .spy(null)
-                .build();
+    @Schema(description = "The player whose turn it is")
+    private Integer turnIndex;
+
+    @Schema(description = "The state of the round")
+    private RoundState roundState;
+
+    public RoundDto() {
+        this.goodWord = null;
+        this.badWord = null;
+        this.spyIndex = null;
+        this.turnIndex = null;
+        this.roundState = RoundState.WAITING;
+    }
+
+    public void start(Integer spyIndex, Integer turnIndex) {
+        this.goodWord = "Zauberstab";
+        this.badWord = "Flugbesen";
+        this.spyIndex = spyIndex;
+        this.turnIndex = turnIndex;
+        this.roundState = RoundState.RUNNING;
     }
 }

@@ -5,8 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.UUID;
 
 @Data
@@ -25,7 +24,7 @@ public class RoomDto {
     private final PlayerDto host;
 
     @Schema(description = "Players in the room")
-    private final List<PlayerDto> players;
+    private final HashSet<PlayerDto> players;
 
     @Schema(description = "Current round in the room")
     private final RoundDto round;
@@ -34,7 +33,7 @@ public class RoomDto {
         this.id = UUID.randomUUID();
         this.code = code;
         this.host = host;
-        this.players = new ArrayList<>();
+        this.players = new HashSet<>();
         this.players.add(host);
         this.round = new RoundDto();
     }

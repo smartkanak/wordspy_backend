@@ -4,14 +4,18 @@ import date.oxi.spyword.dto.PlayerDto;
 import date.oxi.spyword.dto.RoomDto;
 import date.oxi.spyword.dto.RoundDto;
 import date.oxi.spyword.utils.RoomCodeGenerator;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class RoomService {
+
+    @NonNull
+    RoundService roundService;
 
     private final List<RoomDto> rooms = new ArrayList<>();
 
@@ -38,10 +42,11 @@ public class RoomService {
         room.getPlayers().add(player);
     }
 
-    public void startRound(Integer playersCount, RoundDto round) {
-        Random random = new Random();
-        int spyIndex = random.nextInt(playersCount);
-        int turnIndex = random.nextInt(playersCount);
-        round.start(spyIndex, turnIndex);
+    public void startRound(RoundDto round, HashSet<PlayerDto> players) {
+        roundService.start(round, players);
+    }
+
+    public void nextTurn(RoundDto round, HashSet<UUID> currentPlayersUUIDs) {
+        roundService.nextTurn(round, currentPlayersUUIDs);
     }
 }

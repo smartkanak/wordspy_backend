@@ -2,7 +2,6 @@ package date.oxi.spyword.api;
 
 import date.oxi.spyword.dto.PlayerDto;
 import date.oxi.spyword.dto.RoomDto;
-import date.oxi.spyword.dto.RoundDto;
 import date.oxi.spyword.model.RoundState;
 import date.oxi.spyword.service.RoomService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -89,9 +88,9 @@ public class RoomController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         } else {
             // start round
-            Integer playersCount = foundRoom.getPlayers().size();
-            RoundDto round = foundRoom.getRound();
-            roomService.startRound(playersCount, round);
+            roomService.startRound(foundRoom.getRound(), foundRoom.getPlayers());
+
+            // return updated room
             return ResponseEntity.status(HttpStatus.OK).body(foundRoom);
         }
     }

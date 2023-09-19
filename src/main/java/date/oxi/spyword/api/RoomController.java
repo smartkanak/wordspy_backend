@@ -2,23 +2,24 @@ package date.oxi.spyword.api;
 
 import date.oxi.spyword.dto.PlayerDto;
 import date.oxi.spyword.dto.RoomDto;
+import date.oxi.spyword.dto.RoundDto;
 import date.oxi.spyword.model.RoundState;
-import date.oxi.spyword.utils.RoomCodeGenerator;
+import date.oxi.spyword.service.RoomService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
-
 @RestController
 @Tag(name = "Rooms")
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/rooms")
 public class RoomController {
 
-    private final List<RoomDto> rooms = new ArrayList<>();
-    RoomCodeGenerator roomCodeGenerator = new RoomCodeGenerator();
+    @NonNull
+    RoomService roomService;
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
@@ -26,11 +27,7 @@ public class RoomController {
             @RequestBody
             @NonNull PlayerDto host
     ) {
-        String roomCode = roomCodeGenerator.generateUniqueCode();
-        RoomDto roomDto = new RoomDto(host, roomCode);
-
-        rooms.add(roomDto);
-
+        RoomDto roomDto = roomService.createRoom(host);
         return ResponseEntity.status(HttpStatus.CREATED).body(roomDto);
     }
 
@@ -39,7 +36,7 @@ public class RoomController {
             @PathVariable
             @NonNull String code
     ) {
-        RoomDto foundRoom = getRoomByCode(code);
+        RoomDto foundRoom = roomService.getRoomByCode(code);
 
         if (foundRoom == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -55,7 +52,7 @@ public class RoomController {
             @RequestBody
             @NonNull PlayerDto player
     ) {
-        RoomDto foundRoom = getRoomByCode(code);
+        RoomDto foundRoom = roomService.getRoomByCode(code);
 
         if (foundRoom == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -64,16 +61,9 @@ public class RoomController {
         } else if (foundRoom.getPlayers().contains(player)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
         } else {
-            foundRoom.addPlayer(player);
+            roomService.addPlayerToRoom(foundRoom, player);
             return ResponseEntity.status(HttpStatus.OK).body(foundRoom);
         }
-    }
-
-    private RoomDto getRoomByCode(String code) {
-        return rooms.stream()
-                .filter(room -> room.getCode().equals(code))
-                .findFirst()
-                .orElse(null);
     }
 
     @PostMapping("/{code}/start")
@@ -83,7 +73,7 @@ public class RoomController {
             @RequestBody
             @NonNull PlayerDto player
     ) {
-        RoomDto foundRoom = getRoomByCode(code);
+        RoomDto foundRoom = roomService.getRoomByCode(code);
 
         if (foundRoom == null) {
             // no room found
@@ -99,7 +89,9 @@ public class RoomController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         } else {
             // start round
-            foundRoom.startRound();
+            Integer playersCount = foundRoom.getPlayers().size();
+            RoundDto round = foundRoom.getRound();
+            roomService.startRound(playersCount, round);
             return ResponseEntity.status(HttpStatus.OK).body(foundRoom);
         }
     }

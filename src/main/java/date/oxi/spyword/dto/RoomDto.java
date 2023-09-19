@@ -7,7 +7,6 @@ import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 
 @Data
@@ -39,15 +38,4 @@ public class RoomDto {
         this.players.add(host);
         this.round = new RoundDto();
     }
-
-    public void addPlayer(PlayerDto player) {
-        this.players.add(player);
-    }
-
-    public void startRound() {
-        int spyIndex = new Random().nextInt(players.size());
-        int turnIndex = new Random().nextInt(players.size());
-        this.round.start(spyIndex, turnIndex);
-    }
-
 }

@@ -1,6 +1,5 @@
 package date.oxi.spyword.service;
 
-import date.oxi.spyword.dto.PlayerDto;
 import date.oxi.spyword.dto.RoundDto;
 import date.oxi.spyword.model.RoundState;
 import org.springframework.stereotype.Service;
@@ -13,29 +12,29 @@ import java.util.UUID;
 @Service
 public class RoundService {
 
-    public void start(RoundDto round, HashSet<PlayerDto> players) {
+    public void start(RoundDto round, HashSet<UUID> currentPlayersUUIDs) {
         // Get
         String goodWord = "Zauberstab"; // TODO: Get real data
         String badWord = "Flugbesen";
-        PlayerDto spy = getRandomSetElement(players);
-        PlayerDto playersTurn = getRandomSetElement(players);
+        UUID spyId = getRandomSetElement(currentPlayersUUIDs);
+        UUID playersTurnId = getRandomSetElement(currentPlayersUUIDs);
 
         // Set
         round.setGoodWord(goodWord);
         round.setBadWord(badWord);
-        round.setSpyId(spy.getId());
-        round.setPlayersTurnId(playersTurn.getId());
+        round.setSpyId(spyId);
+        round.setPlayersTurnId(playersTurnId);
         round.setRoundState(RoundState.RUNNING);
     }
 
-    public void nextTurn(RoundDto round, HashSet<UUID> currentPlayersUUIDs) {
+    public void nextTurn(RoundDto round, HashSet<UUID> currentPlayerIds) {
         // Get the players who have not yet had their turn
-        HashSet<UUID> playersWithoutTurn = new HashSet<>(currentPlayersUUIDs);
+        HashSet<UUID> playersWithoutTurn = new HashSet<>(currentPlayerIds);
         playersWithoutTurn.removeAll(round.getPlayersWhoTookTurn());
 
         if (playersWithoutTurn.isEmpty()) {
             // If everyone had their turn, begin next round
-            nextRound(round, currentPlayersUUIDs);
+            nextRound(round, currentPlayerIds);
         } else {
             // Else randomly choose one of the players with no turn yet
             UUID nextPlayersTurnId = getRandomSetElement(playersWithoutTurn);
@@ -43,9 +42,9 @@ public class RoundService {
         }
     }
 
-    private void nextRound(RoundDto round, HashSet<UUID> currentPlayersUUIDs) {
+    private void nextRound(RoundDto round, HashSet<UUID> currentPlayerIds) {
         // Any players turn
-        UUID playersTurnId = getRandomSetElement(currentPlayersUUIDs);
+        UUID playersTurnId = getRandomSetElement(currentPlayerIds);
         round.setPlayersTurnId(playersTurnId);
         // Clear Turn history
         round.getPlayersWhoTookTurn().clear();

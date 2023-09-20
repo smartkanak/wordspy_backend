@@ -42,11 +42,11 @@ public class RoomService {
         room.getPlayers().add(player);
     }
 
-    public void startRound(RoundDto round, HashSet<PlayerDto> players) {
-        roundService.start(round, players);
+    public void startRound(RoundDto round, HashSet<UUID> currentPlayerIds) {
+        roundService.start(round, currentPlayerIds);
     }
 
-    public void nextTurn(RoundDto round, HashSet<UUID> currentPlayersUUIDs) {
-        roundService.nextTurn(round, currentPlayersUUIDs);
+    public void nextTurn(RoundDto round, HashSet<UUID> currentPlayerIds) {
+        roundService.nextTurn(round, currentPlayerIds);
     }
 }

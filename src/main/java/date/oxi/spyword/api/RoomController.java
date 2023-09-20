@@ -11,6 +11,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 @RestController
 @Tag(name = "Rooms")
 @RequiredArgsConstructor
@@ -88,7 +92,12 @@ public class RoomController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         } else {
             // start round
-            roomService.startRound(foundRoom.getRound(), foundRoom.getPlayers());
+            // Use stream() to map PlayerDto objects to their IDs and collect them into a HashSet
+            HashSet<UUID> currentPlayerIds = foundRoom.getPlayers().stream()
+                    .map(PlayerDto::getId) // Map PlayerDto to their ID
+                    .collect(Collectors.toCollection(HashSet::new));
+
+            roomService.startRound(foundRoom.getRound(), currentPlayerIds);
 
             // return updated room
             return ResponseEntity.status(HttpStatus.OK).body(foundRoom);

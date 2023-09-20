@@ -46,7 +46,7 @@ public class RoomService {
         roundService.start(round, currentPlayerIds);
     }
 
-    public void nextTurn(RoundDto round, HashSet<UUID> currentPlayerIds) {
-        roundService.nextTurn(round, currentPlayerIds);
+    public void takeTurn(UUID playerIdTakingTurn, RoundDto round, HashSet<UUID> currentPlayerIds) {
+        roundService.takeTurn(playerIdTakingTurn, round, currentPlayerIds);
     }
 }

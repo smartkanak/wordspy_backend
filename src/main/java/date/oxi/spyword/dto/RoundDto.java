@@ -39,7 +39,7 @@ public class RoundDto {
         this.badWord = null;
         this.spyId = null;
         this.playersTurnId = null;
-        this.roundState = RoundState.WAITING;
+        this.roundState = RoundState.WAITING_FOR_PLAYERS;
         this.playersWhoTookTurn = new HashSet<>();
         this.roundNumber = 1;
     }

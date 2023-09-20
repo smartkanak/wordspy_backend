@@ -24,10 +24,16 @@ public class RoundService {
         round.setBadWord(badWord);
         round.setSpyId(spyId);
         round.setPlayersTurnId(playersTurnId);
-        round.setRoundState(RoundState.RUNNING);
+        round.setRoundState(RoundState.PLAYERS_EXCHANGE_WORDS);
     }
 
-    public void nextTurn(RoundDto round, HashSet<UUID> currentPlayerIds) {
+    public void takeTurn(UUID playerIdTakingTurn, RoundDto round, HashSet<UUID> currentPlayerIds) {
+        round.getPlayersWhoTookTurn().add(playerIdTakingTurn);
+
+        prepareNextTurn(round, currentPlayerIds);
+    }
+
+    private void prepareNextTurn(RoundDto round, HashSet<UUID> currentPlayerIds) {
         // Get the players who have not yet had their turn
         HashSet<UUID> playersWithoutTurn = new HashSet<>(currentPlayerIds);
         playersWithoutTurn.removeAll(round.getPlayersWhoTookTurn());

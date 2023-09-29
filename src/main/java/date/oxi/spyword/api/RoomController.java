@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class RoomController {
 
     @NonNull
-    RoomService roomService;
+    private final RoomService roomService;
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
@@ -59,7 +59,7 @@ public class RoomController {
 
         if (foundRoom == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        } else if (!foundRoom.getRound().getRoundState().equals(RoundState.WAITING_FOR_PLAYERS)) {
+        } else if (!foundRoom.getRound().getState().equals(RoundState.WAITING_FOR_PLAYERS)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         } else if (!foundRoom.getPlayers().contains(player)) {
             roomService.addPlayerToRoom(foundRoom, player);
@@ -85,7 +85,7 @@ public class RoomController {
         } else if (foundRoom.getPlayers().size() < 3) {
             // not enough players
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(foundRoom);
-        } else if (!foundRoom.getRound().getRoundState().equals(RoundState.WAITING_FOR_PLAYERS)) {
+        } else if (!foundRoom.getRound().getState().equals(RoundState.WAITING_FOR_PLAYERS)) {
             // round already started
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(foundRoom);
         } else {
@@ -113,7 +113,7 @@ public class RoomController {
         if (foundRoom == null) {
             // no room found
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        } else if (!foundRoom.getRound().getRoundState().equals(RoundState.PLAYERS_EXCHANGE_WORDS)) {
+        } else if (!foundRoom.getRound().getState().equals(RoundState.PLAYERS_EXCHANGE_WORDS)) {
             // round is not in the correct state
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(foundRoom);
         } else if (!foundRoom.getRound().getPlayersTurnId().equals(player.getId())) {

@@ -26,26 +26,26 @@ public class RoundDto {
     private UUID playersTurnId;
 
     @Schema(description = "The state of the round")
-    private RoundState roundState;
+    private RoundState state;
 
     @Schema(description = "List of player UUID's who already took their turn in this round")
     private HashSet<UUID> playersWhoTookTurn;
 
     @Schema(description = "The number of the round")
-    private Integer roundNumber;
+    private Integer number;
 
     public RoundDto() {
         this.goodWord = null;
         this.badWord = null;
         this.spyId = null;
         this.playersTurnId = null;
-        this.roundState = RoundState.WAITING_FOR_PLAYERS;
+        this.state = RoundState.WAITING_FOR_PLAYERS;
         this.playersWhoTookTurn = new HashSet<>();
-        this.roundNumber = 1;
+        this.number = 1;
     }
 
     public void increaseRoundNumber() {
-        roundNumber += 1;
+        number += 1;
     }
 
 }

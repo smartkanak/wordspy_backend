@@ -24,7 +24,7 @@ public class RoundService {
         round.setBadWord(badWord);
         round.setSpyId(spyId);
         round.setPlayersTurnId(playersTurnId);
-        round.setRoundState(RoundState.PLAYERS_EXCHANGE_WORDS);
+        round.setState(RoundState.PLAYERS_EXCHANGE_WORDS);
     }
 
     public void takeTurn(UUID playerIdTakingTurn, RoundDto round, HashSet<UUID> currentPlayerIds) {

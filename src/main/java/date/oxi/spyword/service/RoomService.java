@@ -15,7 +15,7 @@ import java.util.*;
 public class RoomService {
 
     @NonNull
-    RoundService roundService;
+    private final RoundService roundService;
 
     private final List<RoomDto> rooms = new ArrayList<>();
 

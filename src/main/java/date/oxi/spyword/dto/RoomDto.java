@@ -17,7 +17,7 @@ public class RoomDto {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private final UUID id;
 
-    @Schema(description = "Room code", example = "John")
+    @Schema(description = "Room code", example = "KDJSUE")
     private final String code;
 
     @Schema(description = "Host of the room")

@@ -29,12 +29,12 @@ public class RoomDto {
     @Schema(description = "Current round in the room")
     private final RoundDto round;
 
-    public RoomDto(PlayerDto host, String code) {
+    public RoomDto(PlayerDto host, String code, Integer minRounds, Integer maxRounds) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.host = host;
         this.players = new HashSet<>();
         this.players.add(host);
-        this.round = new RoundDto();
+        this.round = new RoundDto(minRounds, maxRounds);
     }
 }

@@ -5,7 +5,9 @@ import date.oxi.spyword.model.RoundState;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -34,7 +36,16 @@ public class RoundDto {
     @Schema(description = "The number of the round")
     private Integer number;
 
-    public RoundDto() {
+    @Schema(description = "The minimum number of rounds")
+    private Integer minRounds;
+
+    @Schema(description = "The maximum number of rounds")
+    private Integer maxRounds;
+
+    @Schema(description = "List of player UUID's who voted to end the game")
+    private Map<UUID, Boolean> playersWhoVotedForEndingGame;
+
+    public RoundDto(Integer minRounds, Integer maxRounds) {
         this.goodWord = null;
         this.badWord = null;
         this.spyId = null;
@@ -42,10 +53,17 @@ public class RoundDto {
         this.state = RoundState.WAITING_FOR_PLAYERS;
         this.playersWhoTookTurn = new HashSet<>();
         this.number = 1;
+        this.minRounds = (minRounds != null) ? minRounds : 3;
+        this.maxRounds = (maxRounds != null) ? maxRounds : 9;
+        this.playersWhoVotedForEndingGame = new HashMap<>();
     }
 
     public void increaseRoundNumber() {
         number += 1;
+    }
+
+    public void increaseMinRounds() {
+        minRounds += 1;
     }
 
 }

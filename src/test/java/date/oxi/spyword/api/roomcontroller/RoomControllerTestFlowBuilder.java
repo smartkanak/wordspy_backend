@@ -1,7 +1,7 @@
 package date.oxi.spyword.api.roomcontroller;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import date.oxi.spyword.dto.PlayerDto;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -27,10 +27,12 @@ public class RoomControllerTestFlowBuilder {
      * @return this for chaining
      * @throws Exception if the request fails
      */
-    public RoomControllerTestFlowBuilder createRoom(PlayerDto host) throws Exception {
+    public RoomControllerTestFlowBuilder createRoom(PlayerDto host, Integer minRounds, Integer maxRounds) throws Exception {
         result = mockMvc.perform(post("/api/v1/rooms/create")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonNodeFromPlayer(host).toString())
+                .content(jsonFromPlayer(host).toString())
+                .param("minRounds", minRounds.toString())
+                .param("maxRounds", maxRounds.toString())
                 .accept(MediaType.APPLICATION_JSON));
 
         return this;
@@ -46,7 +48,7 @@ public class RoomControllerTestFlowBuilder {
     public RoomControllerTestFlowBuilder getRoomInfo(PlayerDto playerInRoom, String roomCode) throws Exception {
         result = mockMvc.perform(get("/api/v1/rooms/" + roomCode)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonNodeFromPlayer(playerInRoom).toString())
+                .content(jsonFromPlayer(playerInRoom).toString())
                 .accept(MediaType.APPLICATION_JSON));
 
         return this;
@@ -63,7 +65,7 @@ public class RoomControllerTestFlowBuilder {
     public RoomControllerTestFlowBuilder joinRoom(PlayerDto playerToJoin, String roomCode) throws Exception {
         result = mockMvc.perform(post("/api/v1/rooms/" + roomCode + "/join")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonNodeFromPlayer(playerToJoin).toString())
+                .content(jsonFromPlayer(playerToJoin).toString())
                 .accept(MediaType.APPLICATION_JSON));
 
         return this;
@@ -81,7 +83,7 @@ public class RoomControllerTestFlowBuilder {
     public RoomControllerTestFlowBuilder startRound(PlayerDto playerToJoin, String roomCode) throws Exception {
         result = mockMvc.perform(post("/api/v1/rooms/" + roomCode + "/start")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonNodeFromPlayer(playerToJoin).toString())
+                .content(jsonFromPlayer(playerToJoin).toString())
                 .accept(MediaType.APPLICATION_JSON));
 
         return this;
@@ -92,20 +94,39 @@ public class RoomControllerTestFlowBuilder {
      * Builder for taking a turn
      *
      * @param playerWhosTurnIs The player who takes the turn
-     * @param roomCode     The room code of the room to take the turn
+     * @param roomCode         The room code of the room to take the turn
      * @return this for chaining
      * @throws Exception if the request fails
      */
     public RoomControllerTestFlowBuilder takeTurn(PlayerDto playerWhosTurnIs, String roomCode) throws Exception {
         result = mockMvc.perform(post("/api/v1/rooms/" + roomCode + "/take-turn")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonNodeFromPlayer(playerWhosTurnIs).toString())
+                .content(jsonFromPlayer(playerWhosTurnIs).toString())
                 .accept(MediaType.APPLICATION_JSON));
 
         return this;
     }
 
-    private JsonNode jsonNodeFromPlayer(PlayerDto player) {
+    /**
+     * Builder for voting to end a game
+     *
+     * @param player     The player who votes to end the game
+     * @param roomCode   The room code of the room to vote to end the game
+     * @param voteForEnd Whether to end the game
+     * @return this for chaining
+     * @throws Exception if the request fails
+     */
+    public RoomControllerTestFlowBuilder voteToEndGame(PlayerDto player, String roomCode, Boolean voteForEnd) throws Exception {
+        result = mockMvc.perform(post("/api/v1/rooms/" + roomCode + "/vote-to-end")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonFromPlayer(player).toString())
+                .param("voteForEnd", voteForEnd.toString())
+                .accept(MediaType.APPLICATION_JSON));
+
+        return this;
+    }
+
+    private ObjectNode jsonFromPlayer(PlayerDto player) {
         return JsonNodeFactory.instance.objectNode()
                 .put("id", player.getId().toString())
                 .put("name", player.getName())

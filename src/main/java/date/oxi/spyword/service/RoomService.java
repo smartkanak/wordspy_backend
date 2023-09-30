@@ -26,11 +26,11 @@ public class RoomService {
                 .orElse(null);
     }
 
-    public RoomDto createRoom(PlayerDto host) {
+    public RoomDto createRoom(PlayerDto host, Integer minRounds, Integer maxRounds) {
         // Create
         RoomCodeGenerator roomCodeGenerator = new RoomCodeGenerator();
         String roomCode = roomCodeGenerator.generateUniqueCode();
-        RoomDto roomDto = new RoomDto(host, roomCode);
+        RoomDto roomDto = new RoomDto(host, roomCode, minRounds, maxRounds);
 
         // Update Database
         rooms.add(roomDto);
@@ -48,5 +48,9 @@ public class RoomService {
 
     public void takeTurn(UUID playerIdTakingTurn, RoundDto round, HashSet<UUID> currentPlayerIds) {
         roundService.takeTurn(playerIdTakingTurn, round, currentPlayerIds);
+    }
+
+    public void voteToEnd(UUID playerIdVoting, RoundDto round, HashSet<UUID> currentPlayerIds, Boolean voteForEnd) {
+        roundService.voteToEnd(playerIdVoting, round, currentPlayerIds, voteForEnd);
     }
 }

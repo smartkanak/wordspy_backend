@@ -47,21 +47,26 @@ public class RoomControllerIntegrationTest {
 
     @Test
     public void basicIntegrationTest() throws Exception {
-        // create room
-        createRoomTest(player_1).andExpect(status().isCreated());
+        Integer minRounds = 1;
+        Integer maxRounds = 2;
+
+        // test create room
+        createRoomTest(player_1, minRounds, maxRounds).andExpect(status().isCreated());
         System.out.println("\n### createRoomTest - player_1 created room");
         System.out.println(strFromRoom(room_1));
         assertNotNull(room_1.getId()); // UUID got created
         assertEquals(player_1.getId(), room_1.getHost().getId()); // player_1 is the host
         assertEquals(RoundState.WAITING_FOR_PLAYERS, room_1.getRound().getState()); // initial round state is waiting
+        assertEquals(minRounds, room_1.getRound().getMinRounds()); // min rounds was set
+        assertEquals(maxRounds, room_1.getRound().getMaxRounds()); // max rounds was set
 
-        // get room info
+        // test get room info
         getRoomInfoTest(player_1, room_1.getCode()).andExpect(status().isOk());
         System.out.println("\n### getRoomInfoTest - room info was queried");
         System.out.println(strFromRoom(room_1));
         assertNotNull(room_1); // room was found
 
-        // join room
+        // test join room
         joinRoomTest(player_2, room_1.getCode()).andExpect(status().isOk());
         joinRoomTest(player_3, room_1.getCode()).andExpect(status().isOk());
         System.out.println("\n### joinRoomTest - player_2 and player_3 joined room");
@@ -71,7 +76,7 @@ public class RoomControllerIntegrationTest {
         assertTrue(room_1.getPlayers().contains(player_2)); // player_2 is in room
         assertTrue(room_1.getPlayers().contains(player_3)); // player_3 is in room
 
-        // start round
+        // test start round
         startRoundTest(player_1, room_1.getCode()).andExpect(status().isOk());
         System.out.println("\n### startRoundTest - player_1 started round");
         System.out.println(strFromRoom(room_1));
@@ -96,6 +101,29 @@ public class RoomControllerIntegrationTest {
         assertEquals(1, room_1.getRound().getNumber()); // Still round 1
         assertEquals(RoundState.PLAYERS_EXCHANGE_WORDS, room_1.getRound().getState()); // still exchanging words
         assertNotEquals(playerTakingTurn.getId(), room_1.getRound().getPlayersTurnId()); // turn was passed on
+
+        // continue taking turns until all 3 rounds finished
+        takeTurnTest(getPlayerWhosturnIs()).andExpect(status().isOk());
+        takeTurnTest(getPlayerWhosturnIs()).andExpect(status().isOk()); // finish round 1
+        assertEquals(RoundState.VOTING_TO_END_GAME, room_1.getRound().getState()); // state changed after minimum room number (1) is reached
+
+        // test voting to end game
+        voteToEndGameTest(player_1, room_1.getCode(), true).andExpect(status().isOk());
+        System.out.println("\n### voteToEndGameTest - player_1 voted to end the game");
+        assertEquals(true, room_1.getRound().getPlayersWhoVotedForEndingGame().get(player_1.getId())); // player_1 voted to end the game
+        assertNull(room_1.getRound().getPlayersWhoVotedForEndingGame().get(player_2.getId())); // player_2 did not vote to end the game
+
+        // continue voting to end game
+        voteToEndGameTest(player_2, room_1.getCode(), false).andExpect(status().isOk());
+        voteToEndGameTest(player_3, room_1.getCode(), false).andExpect(status().isOk());
+        assertEquals(RoundState.PLAYERS_EXCHANGE_WORDS, room_1.getRound().getState()); // state changed after everyone voted
+        assertEquals(2, room_1.getRound().getNumber()); // Round 2 started
+
+        // go through round 2
+        takeTurnTest(getPlayerWhosturnIs()).andExpect(status().isOk());
+        takeTurnTest(getPlayerWhosturnIs()).andExpect(status().isOk());
+        takeTurnTest(getPlayerWhosturnIs()).andExpect(status().isOk());
+        assertEquals(RoundState.VOTING_FOR_SPY, room_1.getRound().getState()); // state changed after everyone voted
     }
 
     /**
@@ -105,9 +133,9 @@ public class RoomControllerIntegrationTest {
      * @return The result of the request
      * @throws Exception if the request fails
      */
-    public ResultActions createRoomTest(PlayerDto player) throws Exception {
+    public ResultActions createRoomTest(PlayerDto player, Integer minRounds, Integer maxRounds) throws Exception {
         ResultActions result = flowBuilder
-                .createRoom(player)
+                .createRoom(player, minRounds, maxRounds)
                 .getResult();
 
         room_1 = roomFromResult(result);
@@ -176,6 +204,15 @@ public class RoomControllerIntegrationTest {
 
         ResultActions result = flowBuilder
                 .takeTurn(playerTakingTurn, room_1.getCode())
+                .getResult();
+
+        room_1 = roomFromResult(result);
+        return result;
+    }
+
+    public ResultActions voteToEndGameTest(PlayerDto playerVoting, String roomCode, Boolean vote) throws Exception {
+        ResultActions result = flowBuilder
+                .voteToEndGame(playerVoting, roomCode, vote)
                 .getResult();
 
         room_1 = roomFromResult(result);

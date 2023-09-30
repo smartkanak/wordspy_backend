@@ -28,9 +28,13 @@ public class RoomController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<RoomDto> createRoom(
             @RequestBody
-            @NonNull PlayerDto host
+            @NonNull PlayerDto host,
+            @RequestParam
+            Integer minRounds,
+            @RequestParam
+            Integer maxRounds
     ) {
-        RoomDto roomDto = roomService.createRoom(host);
+        RoomDto roomDto = roomService.createRoom(host, minRounds, maxRounds);
         return ResponseEntity.status(HttpStatus.CREATED).body(roomDto);
     }
 
@@ -105,7 +109,7 @@ public class RoomController {
     public ResponseEntity<RoomDto> passOnTurn(
             @PathVariable
             @NonNull String code,
-            @RequestBody // Map PlayerDto to their ID
+            @RequestBody
             @NonNull PlayerDto player
     ) {
         RoomDto foundRoom = roomService.getRoomByCode(code);
@@ -126,6 +130,39 @@ public class RoomController {
                     .collect(Collectors.toCollection(HashSet::new));
 
             roomService.takeTurn(player.getId(), foundRoom.getRound(), currentPlayerIds);
+
+            // return updated room
+            return ResponseEntity.status(HttpStatus.OK).body(foundRoom);
+        }
+    }
+
+    @PostMapping("/{code}/vote-to-end")
+    public ResponseEntity<RoomDto> voteToEnd(
+            @PathVariable
+            @NonNull String code,
+            @RequestBody
+            @NonNull PlayerDto player,
+            @RequestParam
+            @NonNull Boolean voteForEnd
+    ) {
+        RoomDto foundRoom = roomService.getRoomByCode(code);
+
+        if (foundRoom == null) {
+            // no room found
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } else if (!foundRoom.getRound().getState().equals(RoundState.VOTING_TO_END_GAME)) {
+            // round is not in the correct state
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(foundRoom);
+        } else if (!foundRoom.getPlayers().contains(player)) {
+            // player is not in the room
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(foundRoom);
+        } else {
+            // pass on turn
+            HashSet<UUID> currentPlayerIds = foundRoom.getPlayers().stream()
+                    .map(PlayerDto::getId)
+                    .collect(Collectors.toCollection(HashSet::new));
+
+            roomService.voteToEnd(player.getId(), foundRoom.getRound(), currentPlayerIds, voteForEnd);
 
             // return updated room
             return ResponseEntity.status(HttpStatus.OK).body(foundRoom);

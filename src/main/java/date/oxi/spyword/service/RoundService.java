@@ -4,10 +4,7 @@ import date.oxi.spyword.dto.RoundDto;
 import date.oxi.spyword.model.RoundState;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class RoundService {
@@ -33,14 +30,43 @@ public class RoundService {
         prepareNextTurn(round, currentPlayerIds);
     }
 
+    public void voteToEnd(UUID playerIdVoting, RoundDto round, HashSet<UUID> currentPlayerIds, Boolean voteForEnd) {
+        Map<UUID, Boolean> votes = round.getPlayersWhoVotedForEndingGame();
+
+        votes.put(playerIdVoting, voteForEnd);
+
+        if (votes.keySet().containsAll(currentPlayerIds)) {
+            // if all current player ids are inside the votes map
+            if (votes.values().stream().filter(v -> v).count() > currentPlayerIds.size() / 2) {
+                // if more than half of the players voted to end the game start voting for spy
+                round.setState(RoundState.VOTING_FOR_SPY);
+            } else {
+                // else continue game
+                votes.clear();
+                round.increaseMinRounds();
+                nextRound(round, currentPlayerIds);
+                round.setState(RoundState.PLAYERS_EXCHANGE_WORDS);
+            }
+        }
+    }
+
     private void prepareNextTurn(RoundDto round, HashSet<UUID> currentPlayerIds) {
         // Get the players who have not yet had their turn
         HashSet<UUID> playersWithoutTurn = new HashSet<>(currentPlayerIds);
         playersWithoutTurn.removeAll(round.getPlayersWhoTookTurn());
 
         if (playersWithoutTurn.isEmpty()) {
-            // If everyone had their turn, begin next round
-            nextRound(round, currentPlayerIds);
+            // If everyone had their turn, you could begin next round
+            if (round.getNumber() >= round.getMaxRounds()) {
+                // If the max number of rounds has been reached, begin voting
+                round.setState(RoundState.VOTING_FOR_SPY);
+            } else if (round.getNumber() >= round.getMinRounds()) {
+                // If the min number of rounds has been reached, begin voting if players want to end game
+                round.setState(RoundState.VOTING_TO_END_GAME);
+            } else {
+                // Else continue with next round
+                nextRound(round, currentPlayerIds);
+            }
         } else {
             // Else randomly choose one of the players with no turn yet
             UUID nextPlayersTurnId = getRandomSetElement(playersWithoutTurn);

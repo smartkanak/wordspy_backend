@@ -47,163 +47,153 @@ public class RoomControllerIntegrationTest {
 
     @Test
     public void basicIntegrationTest() throws Exception {
-        createRoomTest();
-        getRoomInfoTest();
-        joinRoomTest();
-        startRoundTest();
-        takeTurnTest();
+        // create room
+        createRoomTest(player_1).andExpect(status().isCreated());
+        System.out.println("\n### createRoomTest - player_1 created room");
+        System.out.println(strFromRoom(room_1));
+        assertNotNull(room_1.getId()); // UUID got created
+        assertEquals(player_1.getId(), room_1.getHost().getId()); // player_1 is the host
+        assertEquals(RoundState.WAITING_FOR_PLAYERS, room_1.getRound().getState()); // initial round state is waiting
+
+        // get room info
+        getRoomInfoTest(player_1, room_1.getCode()).andExpect(status().isOk());
+        System.out.println("\n### getRoomInfoTest - room info was queried");
+        System.out.println(strFromRoom(room_1));
+        assertNotNull(room_1); // room was found
+
+        // join room
+        joinRoomTest(player_2, room_1.getCode()).andExpect(status().isOk());
+        joinRoomTest(player_3, room_1.getCode()).andExpect(status().isOk());
+        System.out.println("\n### joinRoomTest - player_2 and player_3 joined room");
+        System.out.println(strFromRoom(room_1));
+        assertEquals(3, room_1.getPlayers().size()); // 3 players in room
+        assertEquals(player_1.getId(), room_1.getHost().getId()); // player_1 is still host
+        assertTrue(room_1.getPlayers().contains(player_2)); // player_2 is in room
+        assertTrue(room_1.getPlayers().contains(player_3)); // player_3 is in room
+
+        // start round
+        startRoundTest(player_1, room_1.getCode()).andExpect(status().isOk());
+        System.out.println("\n### startRoundTest - player_1 started round");
+        System.out.println(strFromRoom(room_1));
+        assertNotNull(room_1.getRound().getGoodWord()); // good word was generated
+        assertNotNull(room_1.getRound().getBadWord()); // bad word was generated
+        assertNotNull(room_1.getRound().getSpyId()); // spy id was generated
+        assertTrue(room_1.getPlayers().contains(player_2));
+        assertEquals(RoundState.PLAYERS_EXCHANGE_WORDS, room_1.getRound().getState()); // state is exchanging words
+        assertTrue(
+                // assert that the spy is in the room
+                room_1.getPlayers().stream()
+                        .anyMatch(p ->
+                                p.getId().toString()
+                                        .equals(room_1.getRound().getSpyId().toString()))
+        );
+
+        // test taking a turn
+        PlayerDto playerTakingTurn = getPlayerWhosturnIs();
+        takeTurnTest(playerTakingTurn).andExpect(status().isOk());
+        System.out.println("\n### takeTurnTest - first player took his turn");
+        System.out.println(strFromRoom(room_1));
+        assertEquals(1, room_1.getRound().getNumber()); // Still round 1
+        assertEquals(RoundState.PLAYERS_EXCHANGE_WORDS, room_1.getRound().getState()); // still exchanging words
+        assertNotEquals(playerTakingTurn.getId(), room_1.getRound().getPlayersTurnId()); // turn was passed on
     }
 
     /**
      * Test creating a room
      *
+     * @param player The player who creates the room
+     * @return The result of the request
      * @throws Exception if the request fails
      */
-    public void createRoomTest() throws Exception {
-        // Act
+    public ResultActions createRoomTest(PlayerDto player) throws Exception {
         ResultActions result = flowBuilder
-                .createRoom(player_1)
-                .getResult()
-                .andExpect(status().isCreated());
+                .createRoom(player)
+                .getResult();
 
-        // Print info
-        RoomDto room = roomFromResult(result);
-        System.out.println("\n### createRoomTest - player_1 created room");
-        System.out.println(strFromRoom(room));
-
-        // Assert
-        assertNotNull(room.getId()); // UUID got created
-        assertEquals(player_1.getId(), room.getHost().getId()); // player_1 is the host
-        assertEquals(RoundState.WAITING_FOR_PLAYERS, room.getRound().getState()); // initial round state is waiting
-
-        // Update
-        room_1 = room;
+        room_1 = roomFromResult(result);
+        return result;
     }
 
     /**
      * Test getting a room
      *
+     * @param player   The player who gets the room
+     * @param roomCode The room code of the room to get
+     * @return The result of the request
      * @throws Exception if the request fails
      */
-    public void getRoomInfoTest() throws Exception {
-        // Act
+    public ResultActions getRoomInfoTest(PlayerDto player, String roomCode) throws Exception {
         ResultActions result = flowBuilder
-                .getRoomInfo(player_1, room_1.getCode())
-                .getResult()
-                .andExpect(status().isOk());
+                .getRoomInfo(player, roomCode)
+                .getResult();
 
-        // Print info
-        RoomDto room = roomFromResult(result);
-        System.out.println("\n### getRoomInfoTest - room info was queried");
-        System.out.println(strFromRoom(room));
-
-        // Assert
-        assertNotNull(room); // room was found
-        assertEquals(room.getCode(), room_1.getCode()); // room code is correct
-
-        // Update
-        room_1 = room;
+        room_1 = roomFromResult(result);
+        return result;
     }
 
     /**
      * Test joining a room
      *
+     * @param player   The player who joins the room
+     * @param roomCode The room code of the room to join
+     * @return The result of the request
      * @throws Exception if the request fails
      */
-    public void joinRoomTest() throws Exception {
-        // Act
+    public ResultActions joinRoomTest(PlayerDto player, String roomCode) throws Exception {
         ResultActions result = flowBuilder
-                .joinRoom(player_2, room_1.getCode())
-                .joinRoom(player_3, room_1.getCode())
-                .getResult()
-                .andExpect(status().isOk());
+                .joinRoom(player, roomCode)
+                .getResult();
 
-        // Print info
-        RoomDto room = roomFromResult(result);
-        System.out.println("\n### joinRoomTest - player_2 and player_3 joined room");
-        System.out.println(strFromRoom(room));
-
-        // Assert
-        assertEquals(3, room.getPlayers().size()); // 3 players in room
-        assertEquals(player_1.getId(), room.getHost().getId()); // player_1 is still host
-        assertTrue(room.getPlayers().contains(player_2)); // player_2 is in room
-        assertTrue(room.getPlayers().contains(player_3)); // player_3 is in room
-
-        // Update
-        room_1 = room;
+        room_1 = roomFromResult(result);
+        return result;
     }
 
     /**
      * Test starting a round
      *
+     * @param player   The player who starts the round
+     * @param roomCode The room code of the room to start the round
+     * @return The result of the request
      * @throws Exception if the request fails
      */
-    public void startRoundTest() throws Exception {
-        // Act
+    public ResultActions startRoundTest(PlayerDto player, String roomCode) throws Exception {
         ResultActions result = flowBuilder
-                .startRound(player_1, room_1.getCode())
-                .getResult()
-                .andExpect(status().isOk());
+                .startRound(player, roomCode)
+                .getResult();
 
-        // Print info
-        RoomDto room = roomFromResult(result);
-        System.out.println("\n### startRoundTest - player_1 started round");
-        System.out.println(strFromRoom(room));
-
-        // Assert
-        assertNotNull(room.getRound().getGoodWord()); // good word was generated
-        assertNotNull(room.getRound().getBadWord()); // bad word was generated
-        assertNotNull(room.getRound().getSpyId()); // spy id was generated
-        assertTrue(room.getPlayers().contains(player_2));
-        assertEquals(RoundState.PLAYERS_EXCHANGE_WORDS, room.getRound().getState()); // state is exchanging words
-        assertTrue(
-                // assert that the spy is in the room
-                room.getPlayers().stream()
-                        .anyMatch(player ->
-                                player.getId().toString()
-                                        .equals(room.getRound().getSpyId().toString()))
-        );
-
-        // Update
-        room_1 = room;
+        room_1 = roomFromResult(result);
+        return result;
     }
 
     /**
      * Test taking a turn
      *
+     * @param playerTakingTurn The player who takes the turn
+     * @return The result of the request
      * @throws Exception if the request fails
      */
-    public void takeTurnTest() throws Exception {
+    public ResultActions takeTurnTest(PlayerDto playerTakingTurn) throws Exception {
+
+        ResultActions result = flowBuilder
+                .takeTurn(playerTakingTurn, room_1.getCode())
+                .getResult();
+
+        room_1 = roomFromResult(result);
+        return result;
+    }
+
+    private static PlayerDto getPlayerWhosturnIs() {
         PlayerDto playerWhosTurnIs = room_1.getPlayers().stream()
                 .filter(player -> player.getId().equals(room_1.getRound().getPlayersTurnId()))
                 .findFirst()
                 .orElse(null);
         assert playerWhosTurnIs != null;
-
-        // Act
-        ResultActions result = flowBuilder
-                .takeTurn(playerWhosTurnIs, room_1.getCode())
-                .getResult()
-                .andExpect(status().isOk());
-
-        // Print info
-        RoomDto room = roomFromResult(result);
-        System.out.println("\n### takeTurnTest - first player took his turn");
-        System.out.println(strFromRoom(room));
-
-        // Assert
-        assertEquals(1, room.getRound().getNumber()); // Still round 1
-        assertEquals(RoundState.PLAYERS_EXCHANGE_WORDS, room.getRound().getState()); // still exchanging words
-        assertNotEquals(playerWhosTurnIs.getId(), room.getRound().getPlayersTurnId()); // turn was passed on
-
-        // Update
-        room_1 = room;
+        return playerWhosTurnIs;
     }
 
     private RoomDto roomFromResult(ResultActions result) throws UnsupportedEncodingException, JsonProcessingException {
         return objectMapper.readValue(result.andReturn().getResponse().getContentAsString(), RoomDto.class);
     }
-
 
     public String strFromRoom(RoomDto room) {
         return "RoomDto(" +

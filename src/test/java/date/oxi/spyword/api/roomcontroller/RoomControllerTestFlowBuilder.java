@@ -10,6 +10,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 
+import java.util.UUID;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
@@ -121,6 +123,16 @@ public class RoomControllerTestFlowBuilder {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonFromPlayer(player).toString())
                 .param("voteForEnd", voteForEnd.toString())
+                .accept(MediaType.APPLICATION_JSON));
+
+        return this;
+    }
+
+    public RoomControllerTestFlowBuilder voteForSpy(PlayerDto playerVoting, String roomCode, UUID voteForSpyId) throws Exception {
+        result = mockMvc.perform(post("/api/v1/rooms/" + roomCode + "/vote-for-spy")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonFromPlayer(playerVoting).toString())
+                .param("voteForSpyId", voteForSpyId.toString())
                 .accept(MediaType.APPLICATION_JSON));
 
         return this;

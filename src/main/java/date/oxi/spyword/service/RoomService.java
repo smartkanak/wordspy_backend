@@ -53,4 +53,8 @@ public class RoomService {
     public void voteToEnd(UUID playerIdVoting, RoundDto round, HashSet<UUID> currentPlayerIds, Boolean voteForEnd) {
         roundService.voteToEnd(playerIdVoting, round, currentPlayerIds, voteForEnd);
     }
+
+    public void voteForSpy(UUID playerIdVoting, RoundDto round, HashSet<UUID> currentPlayerIds, UUID voteForSpyId) {
+        roundService.voteForSpy(playerIdVoting, round, currentPlayerIds, voteForSpyId);
+    }
 }

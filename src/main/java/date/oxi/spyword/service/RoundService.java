@@ -50,6 +50,64 @@ public class RoundService {
         }
     }
 
+    public void voteForSpy(UUID playerIdVoting, RoundDto round, HashSet<UUID> currentPlayerIds, UUID voteForSpyId) {
+        Map<UUID, UUID> votes = round.getPlayersWhoVotedForSpy();
+
+        votes.put(playerIdVoting, voteForSpyId);
+
+        if (votes.keySet().containsAll(currentPlayerIds)) {
+            // if all current player ids are inside the votes map count all votes
+            Map<UUID, Integer> voteCount = new HashMap<>();
+            for (UUID votedPlayer : votes.values()) {
+                Integer currentCount = voteCount.getOrDefault(votedPlayer, 0);
+                voteCount.put(votedPlayer, currentCount + 1);
+            }
+            round.setSpyVoteCounter(voteCount);
+
+            // get the most voted player
+            List<Map.Entry<UUID, Integer>> mostVoted = getMostVoted(voteCount);
+
+            if (mostVoted.size() == 1) {
+                UUID mostVotedId = mostVoted.get(0).getKey();
+                if (mostVotedId.equals(round.getSpyId())) {
+                    // if the most voted player is the spy, spy gets last chance to guess the word
+                    round.setState(RoundState.SPY_GUESS_WORD);
+                } else {
+                    // else spy won because he didn't get blamed
+                    round.setState(RoundState.SPY_WON);
+                }
+            } else {
+                // else more than one player got the majority of votes
+                if (round.getState() == RoundState.VOTING_FOR_SPY) {
+                    // if this is the first time voting for spy, continue with last voting
+                    votes.clear();
+                    round.setState(RoundState.NO_MAJORITY_SPY_VOTES);
+                } else {
+                    assert round.getState() == RoundState.NO_MAJORITY_SPY_VOTES;
+                    // else this was already the second time voting for spy, spy won because he didn't get blamed clearly
+                    round.setState(RoundState.SPY_WON);
+                }
+            }
+        }
+    }
+
+    private static List<Map.Entry<UUID, Integer>> getMostVoted(Map<UUID, Integer> voteCount) {
+        List<Map.Entry<UUID, Integer>> mostVoted = new ArrayList<>();
+        int maxCount = Integer.MIN_VALUE;
+
+        for (Map.Entry<UUID, Integer> entry : voteCount.entrySet()) {
+            int count = entry.getValue();
+            if (count > maxCount) {
+                maxCount = count;
+                mostVoted.clear();
+                mostVoted.add(entry);
+            } else if (count == maxCount) {
+                mostVoted.add(entry);
+            }
+        }
+        return mostVoted;
+    }
+
     private void prepareNextTurn(RoundDto round, HashSet<UUID> currentPlayerIds) {
         // Get the players who have not yet had their turn
         HashSet<UUID> playersWithoutTurn = new HashSet<>(currentPlayerIds);

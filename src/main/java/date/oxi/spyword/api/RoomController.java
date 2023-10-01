@@ -168,4 +168,40 @@ public class RoomController {
             return ResponseEntity.status(HttpStatus.OK).body(foundRoom);
         }
     }
+
+    @PostMapping("/{code}/vote-for-spy")
+    public ResponseEntity<RoomDto> voteForSpy(
+            @PathVariable
+            @NonNull String code,
+            @RequestBody
+            @NonNull PlayerDto player,
+            @RequestParam
+            @NonNull UUID voteForSpyId
+    ) {
+        RoomDto foundRoom = roomService.getRoomByCode(code);
+
+        if (foundRoom == null) {
+            // no room found
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        RoundState state = foundRoom.getRound().getState();
+        if (!state.equals(RoundState.VOTING_FOR_SPY) && !state.equals(RoundState.NO_MAJORITY_SPY_VOTES)) {
+            // round is not in the correct state
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(foundRoom);
+        } else if (!foundRoom.getPlayers().contains(player)) {
+            // player is not in the room
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(foundRoom);
+        } else {
+            // pass on turn
+            HashSet<UUID> currentPlayerIds = foundRoom.getPlayers().stream()
+                    .map(PlayerDto::getId)
+                    .collect(Collectors.toCollection(HashSet::new));
+
+            roomService.voteForSpy(player.getId(), foundRoom.getRound(), currentPlayerIds, voteForSpyId);
+
+            // return updated room
+            return ResponseEntity.status(HttpStatus.OK).body(foundRoom);
+        }
+    }
 }

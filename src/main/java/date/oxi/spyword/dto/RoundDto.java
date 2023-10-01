@@ -5,10 +5,7 @@ import date.oxi.spyword.model.RoundState;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Data
 @Schema
@@ -45,6 +42,12 @@ public class RoundDto {
     @Schema(description = "List of player UUID's who voted to end the game")
     private Map<UUID, Boolean> playersWhoVotedForEndingGame;
 
+    @Schema(description = "List of player UUID's who voted for a possible spy")
+    private Map<UUID, UUID> playersWhoVotedForSpy;
+
+    @Schema(description = "Player UUID's and how often they were voted for as a spy")
+    private Map<UUID, Integer> spyVoteCounter;
+
     public RoundDto(Integer minRounds, Integer maxRounds) {
         this.goodWord = null;
         this.badWord = null;
@@ -56,6 +59,8 @@ public class RoundDto {
         this.minRounds = (minRounds != null) ? minRounds : 3;
         this.maxRounds = (maxRounds != null) ? maxRounds : 9;
         this.playersWhoVotedForEndingGame = new HashMap<>();
+        this.playersWhoVotedForSpy = new HashMap<>();
+        this.spyVoteCounter = null;
     }
 
     public void increaseRoundNumber() {

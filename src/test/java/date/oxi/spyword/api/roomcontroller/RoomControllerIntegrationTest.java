@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.io.UnsupportedEncodingException;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -124,6 +125,21 @@ public class RoomControllerIntegrationTest {
         takeTurnTest(getPlayerWhosturnIs()).andExpect(status().isOk());
         takeTurnTest(getPlayerWhosturnIs()).andExpect(status().isOk());
         assertEquals(RoundState.VOTING_FOR_SPY, room_1.getRound().getState()); // state changed after everyone voted
+
+        // test voting for spy
+        voteForSpyTest(player_1, room_1.getCode(), player_2.getId()).andExpect(status().isOk());
+        voteForSpyTest(player_2, room_1.getCode(), player_3.getId()).andExpect(status().isOk());
+        voteForSpyTest(player_3, room_1.getCode(), player_1.getId()).andExpect(status().isOk());
+        System.out.println("\n### voteForSpyTest - all 3 players voted for each other as the spy (no majority)");
+        assertTrue(room_1.getRound().getSpyVoteCounter().values().stream().allMatch(value -> value == 1)); // all votes counted as 1
+        assertEquals(RoundState.NO_MAJORITY_SPY_VOTES, room_1.getRound().getState()); // state changed to no majority spy votes
+
+        // continue voting for spy
+        UUID actualSpy = room_1.getRound().getSpyId();
+        voteForSpyTest(player_1, room_1.getCode(), actualSpy).andExpect(status().isOk());
+        voteForSpyTest(player_2, room_1.getCode(), actualSpy).andExpect(status().isOk());
+        voteForSpyTest(player_3, room_1.getCode(), actualSpy).andExpect(status().isOk());
+        assertEquals(RoundState.SPY_GUESS_WORD, room_1.getRound().getState()); // state changed to spy guess word because actual spy got most votes
     }
 
     /**
@@ -210,9 +226,34 @@ public class RoomControllerIntegrationTest {
         return result;
     }
 
+    /**
+     * Test voting to end the game
+     * @param playerVoting The player who votes
+     * @param roomCode The room code of the room to vote in
+     * @param vote The vote for ending the game
+     * @return The result of the request
+     * @throws Exception if the request fails
+     */
     public ResultActions voteToEndGameTest(PlayerDto playerVoting, String roomCode, Boolean vote) throws Exception {
         ResultActions result = flowBuilder
                 .voteToEndGame(playerVoting, roomCode, vote)
+                .getResult();
+
+        room_1 = roomFromResult(result);
+        return result;
+    }
+
+    /**
+     * Test voting for a spy
+     * @param playerVoting The player who votes
+     * @param roomCode The room code of the room to vote in
+     * @param voteForSpyId The id of the player who is voted for as the spy
+     * @return The result of the request
+     * @throws Exception if the request fails
+     */
+    public ResultActions voteForSpyTest(PlayerDto playerVoting, String roomCode, UUID voteForSpyId) throws Exception {
+        ResultActions result = flowBuilder
+                .voteForSpy(playerVoting, roomCode, voteForSpyId)
                 .getResult();
 
         room_1 = roomFromResult(result);

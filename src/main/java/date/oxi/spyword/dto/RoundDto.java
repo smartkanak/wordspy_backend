@@ -48,7 +48,7 @@ public class RoundDto {
     @Schema(description = "Player UUID's and how often they were voted for as a spy")
     private Map<UUID, Integer> spyVoteCounter;
 
-    public RoundDto(Integer minRounds, Integer maxRounds) {
+    public RoundDto() {
         this.goodWord = null;
         this.badWord = null;
         this.spyId = null;
@@ -56,8 +56,8 @@ public class RoundDto {
         this.state = RoundState.WAITING_FOR_PLAYERS;
         this.playersWhoTookTurn = new HashSet<>();
         this.number = 1;
-        this.minRounds = (minRounds != null) ? minRounds : 3;
-        this.maxRounds = (maxRounds != null) ? maxRounds : 9;
+        this.minRounds = null;
+        this.maxRounds = null;
         this.playersWhoVotedForEndingGame = new HashMap<>();
         this.playersWhoVotedForSpy = new HashMap<>();
         this.spyVoteCounter = null;

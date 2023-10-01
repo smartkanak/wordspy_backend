@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -28,13 +29,9 @@ public class RoomController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<RoomDto> createRoom(
             @RequestBody
-            @NonNull PlayerDto host,
-            @RequestParam
-            Integer minRounds,
-            @RequestParam
-            Integer maxRounds
+            @NonNull PlayerDto host
     ) {
-        RoomDto roomDto = roomService.createRoom(host, minRounds, maxRounds);
+        RoomDto roomDto = roomService.createRoom(host);
         return ResponseEntity.status(HttpStatus.CREATED).body(roomDto);
     }
 
@@ -76,7 +73,15 @@ public class RoomController {
             @PathVariable
             @NonNull String code,
             @RequestBody
-            @NonNull PlayerDto player
+            @NonNull PlayerDto player,
+            @RequestParam
+            Optional<Integer> minRounds,
+            @RequestParam
+            Optional<Integer> maxRounds,
+            @RequestParam
+            Optional<String> goodWord,
+            @RequestParam
+            Optional<String> badWord
     ) {
         RoomDto foundRoom = roomService.getRoomByCode(code);
 
@@ -98,7 +103,7 @@ public class RoomController {
                     .map(PlayerDto::getId)
                     .collect(Collectors.toCollection(HashSet::new));
 
-            roomService.startRound(foundRoom.getRound(), currentPlayerIds);
+            roomService.startRound(foundRoom.getRound(), currentPlayerIds, minRounds, maxRounds, goodWord, badWord);
 
             // return updated room
             return ResponseEntity.status(HttpStatus.OK).body(foundRoom);
@@ -124,7 +129,7 @@ public class RoomController {
             // player is not the one whose turn it is
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(foundRoom);
         } else {
-            // pass on turn
+            // else take turn and pass on
             HashSet<UUID> currentPlayerIds = foundRoom.getPlayers().stream()
                     .map(PlayerDto::getId)
                     .collect(Collectors.toCollection(HashSet::new));
@@ -157,7 +162,7 @@ public class RoomController {
             // player is not in the room
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(foundRoom);
         } else {
-            // pass on turn
+            // else vote to end
             HashSet<UUID> currentPlayerIds = foundRoom.getPlayers().stream()
                     .map(PlayerDto::getId)
                     .collect(Collectors.toCollection(HashSet::new));
@@ -193,12 +198,41 @@ public class RoomController {
             // player is not in the room
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(foundRoom);
         } else {
-            // pass on turn
+            // else vote for spy
             HashSet<UUID> currentPlayerIds = foundRoom.getPlayers().stream()
                     .map(PlayerDto::getId)
                     .collect(Collectors.toCollection(HashSet::new));
 
             roomService.voteForSpy(player.getId(), foundRoom.getRound(), currentPlayerIds, voteForSpyId);
+
+            // return updated room
+            return ResponseEntity.status(HttpStatus.OK).body(foundRoom);
+        }
+    }
+
+    @PostMapping("/{code}/spy-guess-word")
+    public ResponseEntity<RoomDto> spyGuessWord(
+            @PathVariable
+            @NonNull String code,
+            @RequestBody
+            @NonNull PlayerDto player,
+            @RequestParam
+            @NonNull String guessedWord
+    ) {
+        RoomDto foundRoom = roomService.getRoomByCode(code);
+
+        if (foundRoom == null) {
+            // no room found
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } else if (!foundRoom.getRound().getState().equals(RoundState.SPY_GUESS_WORD)) {
+            // round is not in the correct state
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(foundRoom);
+        } else if (!foundRoom.getRound().getSpyId().equals(player.getId())) {
+            // player guessing is not the spy
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(foundRoom);
+        } else {
+            // let the spy guess the word
+            roomService.spyGuessWord(foundRoom.getRound(), guessedWord);
 
             // return updated room
             return ResponseEntity.status(HttpStatus.OK).body(foundRoom);

@@ -29,12 +29,10 @@ public class RoomControllerTestFlowBuilder {
      * @return this for chaining
      * @throws Exception if the request fails
      */
-    public RoomControllerTestFlowBuilder createRoom(PlayerDto host, Integer minRounds, Integer maxRounds) throws Exception {
+    public RoomControllerTestFlowBuilder createRoom(PlayerDto host) throws Exception {
         result = mockMvc.perform(post("/api/v1/rooms/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonFromPlayer(host).toString())
-                .param("minRounds", minRounds.toString())
-                .param("maxRounds", maxRounds.toString())
                 .accept(MediaType.APPLICATION_JSON));
 
         return this;
@@ -82,10 +80,21 @@ public class RoomControllerTestFlowBuilder {
      * @return this for chaining
      * @throws Exception if the request fails
      */
-    public RoomControllerTestFlowBuilder startRound(PlayerDto playerToJoin, String roomCode) throws Exception {
+    public RoomControllerTestFlowBuilder startRound(
+            PlayerDto playerToJoin,
+            String roomCode,
+            Integer minRounds,
+            Integer maxRounds,
+            String goodWord,
+            String badWord
+    ) throws Exception {
         result = mockMvc.perform(post("/api/v1/rooms/" + roomCode + "/start")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonFromPlayer(playerToJoin).toString())
+                .param("minRounds", minRounds.toString())
+                .param("maxRounds", maxRounds.toString())
+                .param("goodWord", goodWord)
+                .param("badWord", badWord)
                 .accept(MediaType.APPLICATION_JSON));
 
         return this;
@@ -123,6 +132,16 @@ public class RoomControllerTestFlowBuilder {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonFromPlayer(player).toString())
                 .param("voteForEnd", voteForEnd.toString())
+                .accept(MediaType.APPLICATION_JSON));
+
+        return this;
+    }
+
+    public RoomControllerTestFlowBuilder spyGuessWord(PlayerDto playerGuessing, String roomCode, String guessedWord) throws Exception {
+        result = mockMvc.perform(post("/api/v1/rooms/" + roomCode + "/spy-guess-word")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonFromPlayer(playerGuessing).toString())
+                .param("guessedWord", guessedWord)
                 .accept(MediaType.APPLICATION_JSON));
 
         return this;

@@ -9,12 +9,30 @@ import java.util.*;
 @Service
 public class RoundService {
 
-    public void start(RoundDto round, HashSet<UUID> currentPlayersUUIDs) {
+    public void start(
+            RoundDto round,
+            HashSet<UUID> currentPlayersUUIDs,
+            Optional<Integer> minRoundsInput,
+            Optional<Integer> maxRoundsInput,
+            Optional<String> goodWordInput,
+            Optional<String> badWorInput
+    ) {
         // Get
-        String goodWord = "Zauberstab"; // TODO: Get real data
-        String badWord = "Flugbesen";
+        String goodWord;
+        String badWord;
+        if (goodWordInput.isPresent() && badWorInput.isPresent()) {
+            // If good and bad word are given, use them
+            goodWord = goodWordInput.get();
+            badWord = badWorInput.get();
+        } else {
+            // Else use random words
+            goodWord = "Zauberstab"; // TODO: Get real data
+            badWord = "Flugbesen";
+        }
         UUID spyId = getRandomSetElement(currentPlayersUUIDs);
         UUID playersTurnId = getRandomSetElement(currentPlayersUUIDs);
+        Integer minRounds = minRoundsInput.orElse(3);
+        Integer maxRounds = maxRoundsInput.orElse(9);
 
         // Set
         round.setGoodWord(goodWord);
@@ -22,6 +40,8 @@ public class RoundService {
         round.setSpyId(spyId);
         round.setPlayersTurnId(playersTurnId);
         round.setState(RoundState.PLAYERS_EXCHANGE_WORDS);
+        round.setMinRounds(minRounds);
+        round.setMaxRounds(maxRounds);
     }
 
     public void takeTurn(UUID playerIdTakingTurn, RoundDto round, HashSet<UUID> currentPlayerIds) {
@@ -88,6 +108,14 @@ public class RoundService {
                     round.setState(RoundState.SPY_WON);
                 }
             }
+        }
+    }
+
+    public void spyGuessWord(RoundDto round, String guessedWord) {
+        if (guessedWord.trim().equalsIgnoreCase(round.getGoodWord())) {
+            round.setState(RoundState.SPY_WON);
+        } else {
+            round.setState(RoundState.GOOD_TEAM_WON);
         }
     }
 

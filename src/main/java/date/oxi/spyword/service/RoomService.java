@@ -26,24 +26,31 @@ public class RoomService {
                 .orElse(null);
     }
 
-    public RoomDto createRoom(PlayerDto host, Integer minRounds, Integer maxRounds) {
+    public RoomDto createRoom(PlayerDto host) {
         // Create
         RoomCodeGenerator roomCodeGenerator = new RoomCodeGenerator();
         String roomCode = roomCodeGenerator.generateUniqueCode();
-        RoomDto roomDto = new RoomDto(host, roomCode, minRounds, maxRounds);
+        RoomDto room = new RoomDto(host, roomCode, new RoundDto());
 
         // Update Database
-        rooms.add(roomDto);
+        rooms.add(room);
 
-        return roomDto;
+        return room;
     }
 
     public void addPlayerToRoom(RoomDto room, PlayerDto player) {
         room.getPlayers().add(player);
     }
 
-    public void startRound(RoundDto round, HashSet<UUID> currentPlayerIds) {
-        roundService.start(round, currentPlayerIds);
+    public void startRound(
+            RoundDto round,
+            HashSet<UUID> currentPlayerIds,
+            Optional<Integer> minRounds,
+            Optional<Integer> maxRounds,
+            Optional<String> goodWord,
+            Optional<String> badWord
+    ) {
+        roundService.start(round, currentPlayerIds, minRounds, maxRounds, goodWord, badWord);
     }
 
     public void takeTurn(UUID playerIdTakingTurn, RoundDto round, HashSet<UUID> currentPlayerIds) {
@@ -56,5 +63,9 @@ public class RoomService {
 
     public void voteForSpy(UUID playerIdVoting, RoundDto round, HashSet<UUID> currentPlayerIds, UUID voteForSpyId) {
         roundService.voteForSpy(playerIdVoting, round, currentPlayerIds, voteForSpyId);
+    }
+
+    public void spyGuessWord(RoundDto round, String guessedWord) {
+        roundService.spyGuessWord(round, guessedWord);
     }
 }

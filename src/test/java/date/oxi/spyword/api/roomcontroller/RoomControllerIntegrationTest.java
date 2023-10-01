@@ -153,6 +153,9 @@ public class RoomControllerIntegrationTest {
         System.out.println("\n### spyGuessWordTest - spy guessed the good word");
         System.out.println(strFromRoom(room_1));
         assertEquals(RoundState.SPY_WON, room_1.getRound().getState()); // state changed to spy won because spy guessed the word
+
+        // restart game
+        startRoundTest(player_1, room_1.getCode(), minRounds, maxRounds, goodWord, badWord).andExpect(status().isOk());
     }
 
     /**

@@ -17,6 +17,8 @@ public class RoundService {
             Optional<String> goodWordInput,
             Optional<String> badWorInput
     ) {
+        round.reset();
+
         // Get
         String goodWord;
         String badWord;

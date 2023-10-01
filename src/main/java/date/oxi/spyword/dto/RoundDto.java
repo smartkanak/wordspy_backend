@@ -63,6 +63,22 @@ public class RoundDto {
         this.spyVoteCounter = null;
     }
 
+    public void reset() {
+        RoundDto newRound = new RoundDto();
+        this.goodWord = newRound.getGoodWord();
+        this.badWord = newRound.getBadWord();
+        this.spyId = newRound.getSpyId();
+        this.playersTurnId = newRound.getPlayersTurnId();
+        this.state = newRound.getState();
+        this.playersWhoTookTurn = newRound.getPlayersWhoTookTurn();
+        this.number = newRound.getNumber();
+        this.minRounds = newRound.getMinRounds();
+        this.maxRounds = newRound.getMaxRounds();
+        this.playersWhoVotedForEndingGame = newRound.getPlayersWhoVotedForEndingGame();
+        this.playersWhoVotedForSpy = newRound.getPlayersWhoVotedForSpy();
+        this.spyVoteCounter = newRound.getSpyVoteCounter();
+    }
+
     public void increaseRoundNumber() {
         number += 1;
     }

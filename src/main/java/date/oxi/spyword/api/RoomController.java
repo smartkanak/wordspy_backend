@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
@@ -60,7 +61,12 @@ public class RoomController {
 
         if (foundRoom == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        } else if (!foundRoom.getRound().getState().equals(RoundState.WAITING_FOR_PLAYERS)) {
+        } else if (!Arrays.asList(
+                RoundState.WAITING_FOR_PLAYERS,
+                RoundState.SPY_WON,
+                RoundState.GOOD_TEAM_WON
+        ).contains(foundRoom.getRound().getState())) {
+            // if room is not waiting for players or yet finished
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         } else if (!foundRoom.getPlayers().contains(player)) {
             roomService.addPlayerToRoom(foundRoom, player);
@@ -94,8 +100,12 @@ public class RoomController {
         } else if (foundRoom.getPlayers().size() < 3) {
             // not enough players
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(foundRoom);
-        } else if (!foundRoom.getRound().getState().equals(RoundState.WAITING_FOR_PLAYERS)) {
-            // round already started
+        } else if (!Arrays.asList(
+                RoundState.WAITING_FOR_PLAYERS,
+                RoundState.SPY_WON,
+                RoundState.GOOD_TEAM_WON
+        ).contains(foundRoom.getRound().getState())) {
+            // if room is not waiting for players or yet finished
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(foundRoom);
         } else {
             // start round

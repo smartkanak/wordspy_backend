@@ -2,19 +2,25 @@ package date.oxi.spyword.service;
 
 import date.oxi.spyword.dto.RoundDto;
 import date.oxi.spyword.model.RoundState;
+import date.oxi.spyword.repository.RoundRepository;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class RoundService {
 
+    private final RoundRepository repo;
+
     public void start(
-            RoundDto round,
+            @NonNull RoundDto round,
             HashSet<UUID> currentPlayersUUIDs,
             Optional<Integer> minRoundsInput,
             Optional<Integer> maxRoundsInput,
-            Optional<String> goodWordInput,
+            @NonNull Optional<String> goodWordInput,
             Optional<String> badWorInput
     ) {
         round.reset();
@@ -44,15 +50,21 @@ public class RoundService {
         round.setState(RoundState.PLAYERS_EXCHANGE_WORDS);
         round.setMinRounds(minRounds);
         round.setMaxRounds(maxRounds);
+
+        // Update Database
+        repo.save(round);
     }
 
-    public void takeTurn(UUID playerIdTakingTurn, RoundDto round, HashSet<UUID> currentPlayerIds) {
+    public void takeTurn(UUID playerIdTakingTurn, @NonNull RoundDto round, HashSet<UUID> currentPlayerIds) {
         round.getPlayersWhoTookTurn().add(playerIdTakingTurn);
 
         prepareNextTurn(round, currentPlayerIds);
+
+        // Update Database
+        repo.save(round);
     }
 
-    public void voteToEnd(UUID playerIdVoting, RoundDto round, HashSet<UUID> currentPlayerIds, Boolean voteForEnd) {
+    public void voteToEnd(UUID playerIdVoting, @NonNull RoundDto round, HashSet<UUID> currentPlayerIds, Boolean voteForEnd) {
         Map<UUID, Boolean> votes = round.getPlayersWhoVotedForEndingGame();
 
         votes.put(playerIdVoting, voteForEnd);
@@ -70,9 +82,12 @@ public class RoundService {
                 round.setState(RoundState.PLAYERS_EXCHANGE_WORDS);
             }
         }
+
+        // Update Database
+        repo.save(round);
     }
 
-    public void voteForSpy(UUID playerIdVoting, RoundDto round, HashSet<UUID> currentPlayerIds, UUID voteForSpyId) {
+    public void voteForSpy(UUID playerIdVoting, @NonNull RoundDto round, HashSet<UUID> currentPlayerIds, UUID voteForSpyId) {
         Map<UUID, UUID> votes = round.getPlayersWhoVotedForSpy();
 
         votes.put(playerIdVoting, voteForSpyId);
@@ -111,17 +126,23 @@ public class RoundService {
                 }
             }
         }
+
+        // Update Database
+        repo.save(round);
     }
 
-    public void spyGuessWord(RoundDto round, String guessedWord) {
+    public void spyGuessWord(@NonNull RoundDto round, @NonNull String guessedWord) {
         if (guessedWord.trim().equalsIgnoreCase(round.getGoodWord())) {
             round.setState(RoundState.SPY_WON);
         } else {
             round.setState(RoundState.GOOD_TEAM_WON);
         }
+
+        // Update Database
+        repo.save(round);
     }
 
-    private static List<Map.Entry<UUID, Integer>> getMostVoted(Map<UUID, Integer> voteCount) {
+    private static @NonNull List<Map.Entry<UUID, Integer>> getMostVoted(@NonNull Map<UUID, Integer> voteCount) {
         List<Map.Entry<UUID, Integer>> mostVoted = new ArrayList<>();
         int maxCount = Integer.MIN_VALUE;
 
@@ -138,7 +159,7 @@ public class RoundService {
         return mostVoted;
     }
 
-    private void prepareNextTurn(RoundDto round, HashSet<UUID> currentPlayerIds) {
+    private void prepareNextTurn(@NonNull RoundDto round, HashSet<UUID> currentPlayerIds) {
         // Get the players who have not yet had their turn
         HashSet<UUID> playersWithoutTurn = new HashSet<>(currentPlayerIds);
         playersWithoutTurn.removeAll(round.getPlayersWhoTookTurn());
@@ -162,7 +183,7 @@ public class RoundService {
         }
     }
 
-    private void nextRound(RoundDto round, HashSet<UUID> currentPlayerIds) {
+    private void nextRound(@NonNull RoundDto round, HashSet<UUID> currentPlayerIds) {
         // Any players turn
         UUID playersTurnId = getRandomSetElement(currentPlayerIds);
         round.setPlayersTurnId(playersTurnId);
@@ -172,7 +193,7 @@ public class RoundService {
         round.increaseRoundNumber();
     }
 
-    private static <E> E getRandomSetElement(Set<E> set) {
+    private static <E> E getRandomSetElement(@NonNull Set<E> set) {
         return set.stream().skip(new Random().nextInt(set.size())).findFirst().orElse(null);
     }
 }

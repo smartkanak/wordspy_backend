@@ -3,6 +3,7 @@ package date.oxi.spyword.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import date.oxi.spyword.model.RoundState;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.*;
@@ -10,7 +11,13 @@ import java.util.*;
 @Data
 @Schema
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Entity
 public class RoundDto {
+
+    @Schema(description = "Round id", example = "25b43e41-1305-4ace-8c6c-871da6487cf9")
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Schema(description = "The good word for the good team")
     private String goodWord;
@@ -28,7 +35,8 @@ public class RoundDto {
     private RoundState state;
 
     @Schema(description = "List of player UUID's who already took their turn in this round")
-    private HashSet<UUID> playersWhoTookTurn;
+    @ElementCollection
+    private Set<UUID> playersWhoTookTurn;
 
     @Schema(description = "The number of the round")
     private Integer number;
@@ -40,12 +48,15 @@ public class RoundDto {
     private Integer maxRounds;
 
     @Schema(description = "List of player UUID's who voted to end the game")
+    @ElementCollection
     private Map<UUID, Boolean> playersWhoVotedForEndingGame;
 
     @Schema(description = "List of player UUID's who voted for a possible spy")
+    @ElementCollection
     private Map<UUID, UUID> playersWhoVotedForSpy;
 
     @Schema(description = "Player UUID's and how often they were voted for as a spy")
+    @ElementCollection
     private Map<UUID, Integer> spyVoteCounter;
 
     public RoundDto() {

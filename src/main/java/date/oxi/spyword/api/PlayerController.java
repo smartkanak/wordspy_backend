@@ -2,35 +2,35 @@ package date.oxi.spyword.api;
 
 import date.oxi.spyword.dto.CreatePlayerRequest;
 import date.oxi.spyword.dto.PlayerDto;
+import date.oxi.spyword.service.PlayerService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @RestController
 @Tag(name = "Players")
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/players")
 public class PlayerController {
 
-    private final List<PlayerDto> players = new ArrayList<>();
+    @NonNull
+    private final PlayerService playerService;
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<PlayerDto> createPlayer(
             @RequestBody
-            @NonNull CreatePlayerRequest createPlayerRequest
-    ) {
+            @NonNull CreatePlayerRequest request
+     ) {
 
-        PlayerDto playerDto = PlayerDto.register(
-                createPlayerRequest.getName(),
-                createPlayerRequest.getLanguageCode()
+        PlayerDto playerDto = playerService.createPlayer(
+                request.getName(),
+                request.getLanguageCode()
         );
 
-        players.add(playerDto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(playerDto);
     }

@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  mysql-container:
+    image: mysql:8.1
+    container_name: mysql-c1
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mydb
+    restart: always

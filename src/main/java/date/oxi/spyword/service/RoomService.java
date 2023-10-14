@@ -3,6 +3,7 @@ package date.oxi.spyword.service;
 import date.oxi.spyword.dto.PlayerDto;
 import date.oxi.spyword.dto.RoomDto;
 import date.oxi.spyword.dto.RoundDto;
+import date.oxi.spyword.repository.RoomRepository;
 import date.oxi.spyword.utils.RoomCodeGenerator;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -17,13 +18,11 @@ public class RoomService {
     @NonNull
     private final RoundService roundService;
 
-    private final List<RoomDto> rooms = new ArrayList<>();
+    @NonNull
+    private final RoomRepository repo;
 
     public RoomDto getRoomByCode(String code) {
-        return rooms.stream()
-                .filter(room -> room.getCode().equals(code))
-                .findFirst()
-                .orElse(null);
+        return repo.findByCode(code);
     }
 
     public RoomDto createRoom(PlayerDto host) {
@@ -33,13 +32,16 @@ public class RoomService {
         RoomDto room = new RoomDto(host, roomCode, new RoundDto());
 
         // Update Database
-        rooms.add(room);
+        repo.save(room);
 
         return room;
     }
 
     public void addPlayerToRoom(RoomDto room, PlayerDto player) {
-        room.getPlayers().add(player);
+        repo.findById(room.getId()).ifPresent(r -> {
+            r.getPlayers().add(player);
+            repo.save(r);
+        });
     }
 
     public void startRound(

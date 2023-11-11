@@ -1,6 +1,7 @@
 package date.oxi.spyword.service;
 
-import date.oxi.spyword.dto.RoundDto;
+import date.oxi.spyword.entity.RoundEntity;
+import date.oxi.spyword.exception.HttpNotFoundException;
 import date.oxi.spyword.model.RoundState;
 import date.oxi.spyword.repository.RoundRepository;
 import lombok.NonNull;
@@ -15,15 +16,19 @@ public class RoundService {
 
     private final RoundRepository repo;
 
-    public void start(
-            @NonNull RoundDto round,
-            HashSet<UUID> currentPlayersUUIDs,
-            Optional<Integer> minRoundsInput,
-            Optional<Integer> maxRoundsInput,
-            @NonNull Optional<String> goodWordInput,
-            Optional<String> badWorInput
+    public RoundEntity start(
+            @NonNull final UUID roundId,
+            @NonNull final HashSet<UUID> currentPlayersUUIDs,
+            @NonNull final Optional<Integer> minRoundsInput,
+            @NonNull final Optional<Integer> maxRoundsInput,
+            @NonNull final Optional<String> goodWordInput,
+            @NonNull final Optional<String> badWorInput
     ) {
-        round.reset();
+        RoundEntity foundRound = repo.findById(roundId).orElseThrow(
+                () -> new HttpNotFoundException("Round not found")
+        );
+
+        foundRound.reset();
 
         // Get
         String goodWord;
@@ -43,28 +48,37 @@ public class RoundService {
         Integer maxRounds = maxRoundsInput.orElse(9);
 
         // Set
-        round.setGoodWord(goodWord);
-        round.setBadWord(badWord);
-        round.setSpyId(spyId);
-        round.setPlayersTurnId(playersTurnId);
-        round.setState(RoundState.PLAYERS_EXCHANGE_WORDS);
-        round.setMinRounds(minRounds);
-        round.setMaxRounds(maxRounds);
+        foundRound.setGoodWord(goodWord);
+        foundRound.setBadWord(badWord);
+        foundRound.setSpyId(spyId);
+        foundRound.setPlayersTurnId(playersTurnId);
+        foundRound.setState(RoundState.PLAYERS_EXCHANGE_WORDS);
+        foundRound.setMinRounds(minRounds);
+        foundRound.setMaxRounds(maxRounds);
 
-        // Update Database
-        repo.save(round);
+        // Update Database and return
+        return repo.save(foundRound);
     }
 
-    public void takeTurn(UUID playerIdTakingTurn, @NonNull RoundDto round, HashSet<UUID> currentPlayerIds) {
+    public RoundEntity takeTurn(
+            @NonNull final UUID playerIdTakingTurn,
+            @NonNull final RoundEntity round,
+            @NonNull final HashSet<UUID> currentPlayerIds
+    ) {
         round.getPlayersWhoTookTurn().add(playerIdTakingTurn);
 
         prepareNextTurn(round, currentPlayerIds);
 
         // Update Database
-        repo.save(round);
+        return repo.save(round);
     }
 
-    public void voteToEnd(UUID playerIdVoting, @NonNull RoundDto round, HashSet<UUID> currentPlayerIds, Boolean voteForEnd) {
+    public RoundEntity voteToEnd(
+            @NonNull final UUID playerIdVoting,
+            @NonNull final RoundEntity round,
+            @NonNull final HashSet<UUID> currentPlayerIds,
+            @NonNull final Boolean voteForEnd
+    ) {
         Map<UUID, Boolean> votes = round.getPlayersWhoVotedForEndingGame();
 
         votes.put(playerIdVoting, voteForEnd);
@@ -84,10 +98,15 @@ public class RoundService {
         }
 
         // Update Database
-        repo.save(round);
+        return repo.save(round);
     }
 
-    public void voteForSpy(UUID playerIdVoting, @NonNull RoundDto round, HashSet<UUID> currentPlayerIds, UUID voteForSpyId) {
+    public RoundEntity voteForSpy(
+            @NonNull final UUID playerIdVoting,
+            @NonNull final RoundEntity round,
+            @NonNull final HashSet<UUID> currentPlayerIds,
+            @NonNull final UUID voteForSpyId
+    ) {
         Map<UUID, UUID> votes = round.getPlayersWhoVotedForSpy();
 
         votes.put(playerIdVoting, voteForSpyId);
@@ -118,9 +137,9 @@ public class RoundService {
                 if (round.getState() == RoundState.VOTING_FOR_SPY) {
                     // if this is the first time voting for spy, continue with last voting
                     votes.clear();
-                    round.setState(RoundState.NO_MAJORITY_SPY_VOTES);
+                    round.setState(RoundState.VOTING_FOR_SPY_RETRY);
                 } else {
-                    assert round.getState() == RoundState.NO_MAJORITY_SPY_VOTES;
+                    assert round.getState() == RoundState.VOTING_FOR_SPY_RETRY;
                     // else this was already the second time voting for spy, spy won because he didn't get blamed clearly
                     round.setState(RoundState.SPY_WON);
                 }
@@ -128,10 +147,13 @@ public class RoundService {
         }
 
         // Update Database
-        repo.save(round);
+        return repo.save(round);
     }
 
-    public void spyGuessWord(@NonNull RoundDto round, @NonNull String guessedWord) {
+    public RoundEntity spyGuessWord(
+            @NonNull final RoundEntity round,
+            @NonNull final String guessedWord
+    ) {
         if (guessedWord.trim().equalsIgnoreCase(round.getGoodWord())) {
             round.setState(RoundState.SPY_WON);
         } else {
@@ -139,7 +161,7 @@ public class RoundService {
         }
 
         // Update Database
-        repo.save(round);
+        return repo.save(round);
     }
 
     private static @NonNull List<Map.Entry<UUID, Integer>> getMostVoted(@NonNull Map<UUID, Integer> voteCount) {
@@ -159,7 +181,7 @@ public class RoundService {
         return mostVoted;
     }
 
-    private void prepareNextTurn(@NonNull RoundDto round, HashSet<UUID> currentPlayerIds) {
+    private void prepareNextTurn(@NonNull RoundEntity round, HashSet<UUID> currentPlayerIds) {
         // Get the players who have not yet had their turn
         HashSet<UUID> playersWithoutTurn = new HashSet<>(currentPlayerIds);
         playersWithoutTurn.removeAll(round.getPlayersWhoTookTurn());
@@ -183,7 +205,7 @@ public class RoundService {
         }
     }
 
-    private void nextRound(@NonNull RoundDto round, HashSet<UUID> currentPlayerIds) {
+    private void nextRound(@NonNull RoundEntity round, HashSet<UUID> currentPlayerIds) {
         // Any players turn
         UUID playersTurnId = getRandomSetElement(currentPlayerIds);
         round.setPlayersTurnId(playersTurnId);

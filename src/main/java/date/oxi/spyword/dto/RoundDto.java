@@ -3,20 +3,22 @@ package date.oxi.spyword.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import date.oxi.spyword.model.RoundState;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.*;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Entity
 public class RoundDto {
 
     @Schema(description = "Round id", example = "25b43e41-1305-4ace-8c6c-871da6487cf9")
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Schema(description = "The good word for the good team")
@@ -35,7 +37,6 @@ public class RoundDto {
     private RoundState state;
 
     @Schema(description = "List of player UUID's who already took their turn in this round")
-    @ElementCollection
     private Set<UUID> playersWhoTookTurn;
 
     @Schema(description = "The number of the round")
@@ -48,54 +49,11 @@ public class RoundDto {
     private Integer maxRounds;
 
     @Schema(description = "List of player UUID's who voted to end the game")
-    @ElementCollection
     private Map<UUID, Boolean> playersWhoVotedForEndingGame;
 
     @Schema(description = "List of player UUID's who voted for a possible spy")
-    @ElementCollection
     private Map<UUID, UUID> playersWhoVotedForSpy;
 
     @Schema(description = "Player UUID's and how often they were voted for as a spy")
-    @ElementCollection
     private Map<UUID, Integer> spyVoteCounter;
-
-    public RoundDto() {
-        this.goodWord = null;
-        this.badWord = null;
-        this.spyId = null;
-        this.playersTurnId = null;
-        this.state = RoundState.WAITING_FOR_PLAYERS;
-        this.playersWhoTookTurn = new HashSet<>();
-        this.number = 1;
-        this.minRounds = null;
-        this.maxRounds = null;
-        this.playersWhoVotedForEndingGame = new HashMap<>();
-        this.playersWhoVotedForSpy = new HashMap<>();
-        this.spyVoteCounter = null;
-    }
-
-    public void reset() {
-        RoundDto newRound = new RoundDto();
-        this.goodWord = newRound.getGoodWord();
-        this.badWord = newRound.getBadWord();
-        this.spyId = newRound.getSpyId();
-        this.playersTurnId = newRound.getPlayersTurnId();
-        this.state = newRound.getState();
-        this.playersWhoTookTurn = newRound.getPlayersWhoTookTurn();
-        this.number = newRound.getNumber();
-        this.minRounds = newRound.getMinRounds();
-        this.maxRounds = newRound.getMaxRounds();
-        this.playersWhoVotedForEndingGame = newRound.getPlayersWhoVotedForEndingGame();
-        this.playersWhoVotedForSpy = newRound.getPlayersWhoVotedForSpy();
-        this.spyVoteCounter = newRound.getSpyVoteCounter();
-    }
-
-    public void increaseRoundNumber() {
-        number += 1;
-    }
-
-    public void increaseMinRounds() {
-        minRounds += 1;
-    }
-
 }

@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Schema
-public class CreatePlayerRequest {
+public class CreatePlayerRequestDto {
 
         @Schema(description = "Player name", example = "John")
         private final String name;
